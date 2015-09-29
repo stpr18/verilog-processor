@@ -1,0 +1,211 @@
+#! /c/iverilog/bin/vvp
+:ivl_version "0.9.7 " "(v0_9_7)";
+:vpi_time_precision + 0;
+:vpi_module "system";
+:vpi_module "v2005_math";
+:vpi_module "va_math";
+S_003A9788 .scope module, "memory_test" "memory_test" 2 23;
+ .timescale 0 0;
+v005CB4F8_0 .var "addr", 15 0;
+v005CB448_0 .var "clk", 0 0;
+v005CB550_0 .net "rline", 47 0, L_005CACB8; 1 drivers
+v005CB600_0 .var "rw", 1 0;
+v005CB398_0 .var "wline", 31 0;
+S_003A8B50 .scope module, "memory" "memory" 2 31, 2 1, S_003A9788;
+ .timescale 0 0;
+v003A8330_0 .net *"_s0", 7 0, L_005CB188; 1 drivers
+v003A8070_0 .net *"_s10", 31 0, L_005CB080; 1 drivers
+v003A8120_0 .net *"_s12", 7 0, L_005CB3F0; 1 drivers
+v003A80C8_0 .net *"_s14", 31 0, C4<00000000000000000000000000000010>; 1 drivers
+v003A7C50_0 .net *"_s18", 15 0, C4<0000000000000000>; 1 drivers
+v003A7D00_0 .net *"_s19", 31 0, L_005CAF20; 1 drivers
+v003A7DB0_0 .net *"_s2", 7 0, L_005CB658; 1 drivers
+v003A7D58_0 .net *"_s20", 31 0, L_005CAE70; 1 drivers
+v003A7FC0_0 .net *"_s22", 7 0, L_005CB6B0; 1 drivers
+v003A8178_0 .net *"_s24", 31 0, C4<00000000000000000000000000000011>; 1 drivers
+v003A81D0_0 .net *"_s28", 15 0, C4<0000000000000000>; 1 drivers
+v005CBAD0_0 .net *"_s29", 31 0, L_005CAEC8; 1 drivers
+v005CB7B8_0 .net *"_s30", 31 0, L_005CB238; 1 drivers
+v005CB868_0 .net *"_s32", 7 0, L_005CB0D8; 1 drivers
+v005CBA20_0 .net *"_s34", 31 0, C4<00000000000000000000000000000100>; 1 drivers
+v005CB918_0 .net *"_s38", 15 0, C4<0000000000000000>; 1 drivers
+v005CB8C0_0 .net *"_s39", 31 0, L_005CAD68; 1 drivers
+v005CB810_0 .net *"_s4", 31 0, C4<00000000000000000000000000000001>; 1 drivers
+v005CB970_0 .net *"_s40", 31 0, L_005CB708; 1 drivers
+v005CBB28_0 .net *"_s42", 7 0, L_005CAC60; 1 drivers
+v005CB9C8_0 .net *"_s44", 31 0, C4<00000000000000000000000000000101>; 1 drivers
+v005CBA78_0 .net *"_s48", 15 0, C4<0000000000000000>; 1 drivers
+v005CBB80_0 .net *"_s49", 31 0, L_005CB2E8; 1 drivers
+v005CBBD8_0 .net *"_s50", 31 0, L_005CB340; 1 drivers
+v005CB760_0 .net *"_s8", 15 0, C4<0000000000000000>; 1 drivers
+v005CB4A0_0 .net *"_s9", 31 0, L_005CB028; 1 drivers
+v005CB1E0_0 .net "addr", 15 0, v005CB4F8_0; 1 drivers
+v005CB5A8_0 .net "clk", 0 0, v005CB448_0; 1 drivers
+v005CB130 .array "data", 65535 0, 7 0;
+v005CADC0_0 .net "idata", 31 0, v005CB398_0; 1 drivers
+v005CB290_0 .alias "odata", 47 0, v005CB550_0;
+v005CAE18_0 .net "rw", 1 0, v005CB600_0; 1 drivers
+E_00594588 .event edge, v005CB5A8_0;
+L_005CB188 .array/port v005CB130, v005CB4F8_0;
+L_005CB658 .array/port v005CB130, L_005CB080;
+L_005CB028 .concat [ 16 16 0 0], v005CB4F8_0, C4<0000000000000000>;
+L_005CB080 .arith/sum 32, L_005CB028, C4<00000000000000000000000000000001>;
+L_005CB3F0 .array/port v005CB130, L_005CAE70;
+L_005CAF20 .concat [ 16 16 0 0], v005CB4F8_0, C4<0000000000000000>;
+L_005CAE70 .arith/sum 32, L_005CAF20, C4<00000000000000000000000000000010>;
+L_005CB6B0 .array/port v005CB130, L_005CB238;
+L_005CAEC8 .concat [ 16 16 0 0], v005CB4F8_0, C4<0000000000000000>;
+L_005CB238 .arith/sum 32, L_005CAEC8, C4<00000000000000000000000000000011>;
+L_005CB0D8 .array/port v005CB130, L_005CB708;
+L_005CAD68 .concat [ 16 16 0 0], v005CB4F8_0, C4<0000000000000000>;
+L_005CB708 .arith/sum 32, L_005CAD68, C4<00000000000000000000000000000100>;
+L_005CAC60 .array/port v005CB130, L_005CB340;
+L_005CB2E8 .concat [ 16 16 0 0], v005CB4F8_0, C4<0000000000000000>;
+L_005CB340 .arith/sum 32, L_005CB2E8, C4<00000000000000000000000000000101>;
+LS_005CACB8_0_0 .concat [ 8 8 8 8], L_005CAC60, L_005CB0D8, L_005CB6B0, L_005CB3F0;
+LS_005CACB8_0_4 .concat [ 8 8 0 0], L_005CB658, L_005CB188;
+L_005CACB8 .concat [ 32 16 0 0], LS_005CACB8_0_0, LS_005CACB8_0_4;
+    .scope S_003A8B50;
+T_0 ;
+    %wait E_00594588;
+    %load/v 8, v005CAE18_0, 2;
+    %cmpi/u 8, 1, 2;
+    %jmp/1 T_0.0, 6;
+    %cmpi/u 8, 2, 2;
+    %jmp/1 T_0.1, 6;
+    %cmpi/u 8, 3, 2;
+    %jmp/1 T_0.2, 6;
+    %jmp T_0.3;
+T_0.0 ;
+    %load/v 8, v005CADC0_0, 32;
+    %ix/getv 3, v005CB1E0_0;
+    %jmp/1 t_0, 4;
+    %ix/load 0, 8, 0; word width
+    %ix/load 1, 0, 0; part off
+    %assign/av v005CB130, 0, 8;
+t_0 ;
+    %jmp T_0.3;
+T_0.1 ;
+    %load/v 8, v005CADC0_0, 32;
+    %ix/load 0, 1, 0;
+    %load/vp0 40, v005CB1E0_0, 32;
+    %ix/get 3, 40, 32;
+    %jmp/1 t_1, 4;
+    %ix/load 0, 8, 0; word width
+    %ix/load 1, 0, 0; part off
+    %assign/av v005CB130, 0, 8;
+t_1 ;
+    %ix/getv 3, v005CB1E0_0;
+    %jmp/1 t_2, 4;
+    %ix/load 0, 8, 0; word width
+    %ix/load 1, 0, 0; part off
+    %assign/av v005CB130, 0, 16;
+t_2 ;
+    %jmp T_0.3;
+T_0.2 ;
+    %load/v 8, v005CADC0_0, 32;
+    %ix/load 0, 3, 0;
+    %load/vp0 40, v005CB1E0_0, 32;
+    %ix/get 3, 40, 32;
+    %jmp/1 t_3, 4;
+    %ix/load 0, 8, 0; word width
+    %ix/load 1, 0, 0; part off
+    %assign/av v005CB130, 0, 8;
+t_3 ;
+    %ix/load 0, 2, 0;
+    %load/vp0 40, v005CB1E0_0, 32;
+    %ix/get 3, 40, 32;
+    %jmp/1 t_4, 4;
+    %ix/load 0, 8, 0; word width
+    %ix/load 1, 0, 0; part off
+    %assign/av v005CB130, 0, 16;
+t_4 ;
+    %ix/load 0, 1, 0;
+    %load/vp0 40, v005CB1E0_0, 32;
+    %ix/get 3, 40, 32;
+    %jmp/1 t_5, 4;
+    %ix/load 0, 8, 0; word width
+    %ix/load 1, 0, 0; part off
+    %assign/av v005CB130, 0, 24;
+t_5 ;
+    %ix/getv 3, v005CB1E0_0;
+    %jmp/1 t_6, 4;
+    %ix/load 0, 8, 0; word width
+    %ix/load 1, 0, 0; part off
+    %assign/av v005CB130, 0, 32;
+t_6 ;
+    %jmp T_0.3;
+T_0.3 ;
+    %jmp T_0;
+    .thread T_0, $push;
+    .scope S_003A9788;
+T_1 ;
+    %vpi_call 2 34 "$monitor", "%t: rw = %b, addr = %x, wline = %x, rline = %x", $time, v005CB600_0, v005CB4F8_0, v005CB398_0, v005CB550_0;
+    %ix/load 0, 1, 0;
+    %assign/v0 v005CB448_0, 0, 0;
+    %delay 10, 0;
+    %ix/load 0, 2, 0;
+    %assign/v0 v005CB600_0, 0, 1;
+    %ix/load 0, 16, 0;
+    %assign/v0 v005CB4F8_0, 0, 0;
+    %movi 8, 1450744508, 32;
+    %ix/load 0, 32, 0;
+    %assign/v0 v005CB398_0, 0, 8;
+    %delay 10, 0;
+    %ix/load 0, 2, 0;
+    %assign/v0 v005CB600_0, 0, 0;
+    %ix/load 0, 16, 0;
+    %assign/v0 v005CB4F8_0, 0, 0;
+    %delay 10, 0;
+    %movi 8, 2, 2;
+    %ix/load 0, 2, 0;
+    %assign/v0 v005CB600_0, 0, 8;
+    %movi 8, 1, 16;
+    %ix/load 0, 16, 0;
+    %assign/v0 v005CB4F8_0, 0, 8;
+    %movi 8, 305419896, 32;
+    %ix/load 0, 32, 0;
+    %assign/v0 v005CB398_0, 0, 8;
+    %delay 10, 0;
+    %ix/load 0, 2, 0;
+    %assign/v0 v005CB600_0, 0, 0;
+    %ix/load 0, 16, 0;
+    %assign/v0 v005CB4F8_0, 0, 0;
+    %delay 10, 0;
+    %ix/load 0, 2, 0;
+    %assign/v0 v005CB600_0, 0, 1;
+    %movi 8, 3, 16;
+    %ix/load 0, 16, 0;
+    %assign/v0 v005CB4F8_0, 0, 8;
+    %movi 8, 3740345157, 32;
+    %ix/load 0, 32, 0;
+    %assign/v0 v005CB398_0, 0, 8;
+    %delay 10, 0;
+    %ix/load 0, 2, 0;
+    %assign/v0 v005CB600_0, 0, 0;
+    %ix/load 0, 16, 0;
+    %assign/v0 v005CB4F8_0, 0, 0;
+    %delay 10, 0;
+    %ix/load 0, 2, 0;
+    %assign/v0 v005CB600_0, 0, 0;
+    %movi 8, 2, 16;
+    %ix/load 0, 16, 0;
+    %assign/v0 v005CB4F8_0, 0, 8;
+    %delay 10, 0;
+    %vpi_call 2 61 "$finish";
+    %end;
+    .thread T_1;
+    .scope S_003A9788;
+T_2 ;
+    %delay 10, 0;
+    %load/v 8, v005CB448_0, 1;
+    %inv 8, 1;
+    %ix/load 0, 1, 0;
+    %assign/v0 v005CB448_0, 0, 8;
+    %jmp T_2;
+    .thread T_2;
+# The file index is used to find the file name in the following table.
+:file_names 3;
+    "N/A";
+    "<interactive>";
+    "memory.v";

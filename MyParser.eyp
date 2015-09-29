@@ -1,0 +1,364 @@
+%strict
+
+%{
+use feature qw( switch );
+
+my %ops = (
+	MOV => [1, 0b00001000],
+	ADD => [1, 0b00010000],
+	ADC => [1, 0b00011000],
+	SUB => [1, 0b00100000],
+	SBB => [1, 0b00101000],
+	MUL => [2, 0b11000000, 0b00],
+	IMUL => [2, 0b11000000, 0b01],
+	DIV => [2, 0b11000000, 0b10],
+	IDIV => [2, 0b11000000, 0b11],
+	AND => [1, 0b00110000],
+	OR => [1, 0b00111000],
+	XOR => [1, 0b01000000],
+	NOT => [2, 0b11000001, 0b00],
+	NEG => [2, 0b11000001, 0b01],
+	INC => [2, 0b11000001, 0b10],
+	DEC => [2, 0b11000001, 0b11],
+	TEST => [1, 0b10000000],
+	SAL => [1, 0b01001000],
+	SHL => [1, 0b01001000],
+	SAR => [1, 0b01010000],
+	SHR => [1, 0b01011000],
+	RCL => [1, 0b01100000],
+	RCR => [1, 0b01101000],
+	ROL => [1, 0b01110000],
+	ROR => [1, 0b01111000],
+	CMP => [1, 0b10001000],
+	JMP => [2, 0b11000100, 0b00],
+	JE => [2, 0b11000100, 0b01],
+	JNE => [2, 0b11000100, 0b10],
+	JA => [2, 0b11000100, 0b11],
+	JAE => [2, 0b11000101, 0b00],
+	JB => [2, 0b11000101, 0b01],
+	JBE => [2, 0b11000101, 0b10],
+	JG => [2, 0b11000101, 0b11],
+	JGE => [2, 0b11000110, 0b00],
+	JL => [2, 0b11000110, 0b01],
+	JLE => [2, 0b11000110, 0b10],
+	JS => [2, 0b11000110, 0b11],
+	JNS => [2, 0b11000111, 0b00],
+	JO => [2, 0b11000111, 0b01],
+	JNO => [2, 0b11000111, 0b10],
+	JCRZ => [2, 0b11000111, 0b11],
+	LOOP => [2, 0b11001000, 0b00],
+	LOOPE => [2, 0b11001000, 0b01],
+	LOOPNE => [2, 0b11001000, 0b10],
+	PUSH => [2, 0b11001100, 0b00],
+	POP => [2, 0b11001100, 0b01],
+	CALL => [2, 0b11001100, 0b10],
+	RET => [3, 0b11111110, 0b00000000],
+	SYS => [4, 0b11111111],
+	DB => [100, 0],
+	DW => [100, 1]
+);
+my %regs = (
+	R0 => {id => 0b0011, no => 0},
+	RH0 => {id => 0b0010, no => 0},
+	RL0 => {id => 0b0001, no => 0},
+	R1 => {id => 0b0111, no => 1},
+	RH1 => {id => 0b0110, no => 1},
+	RL1 => {id => 0b0101, no => 1},
+	R2 => {id => 0b1011, no => 2},
+	RH2 => {id => 0b1010, no => 2},
+	RL2 => {id => 0b1001, no => 2},
+	R3 => {id => 0b1111, no => 3},
+	RH3 => {id => 0b1110, no => 3},
+	RL3 => {id => 0b1101, no => 3},
+	R4 => {id => 0b0000, no => 4},
+	R5 => {id => 0b0100, no => 5},
+	R6 => {id => 0b1000, no => 6},
+	R7 => {id => 0b1100, no => 7},
+);
+%}
+
+%token OP1
+%token OP2
+%token OP3
+%token OP4
+%token OP100
+
+%token ID
+%token NUM
+%token BYTE
+%token WORD
+%token REG
+%token STR0
+%token STR1
+
+%token DFIN
+%token DDIS1
+%token DDIS2
+%token DDMPR
+
+%%
+line:	label.label
+		{
+			init($_[0]);
+			if (defined $label) {
+				addLabel($_[0], $label->{name}, $label->{addr});
+			}
+		}
+		op.op
+		{
+			if (defined $op) {
+				addOp($_[0], $op);
+			}
+			{label => $label, op => $op};
+		}
+	;
+	
+label:	{ undef; }
+		|$ID ':'	{ {name => $ID, addr => undef}; }
+		|$ID ':' $NUM	{ {name => $ID, addr => $NUM}; }
+		|':' $NUM	{ {name => undef, addr => $NUM}; }
+		;
+
+op:	{ undef; }
+	|OP1 reg.arg1 ',' reg.arg2	{ [$_[1]->[1] | 0b000, $arg1->{id} << 4 | $arg2->{id}];  }
+	|OP1 reg.arg1 ',' mem.arg2	{ [$_[1]->[1] | 0b001, $arg1->{id} << 4 | $arg2->{type}, $arg2->{num}]; }
+	|OP1 reg.arg1 ',' imm.arg2	{ [$_[1]->[1] | 0b010, $arg1->{id} << 4 | $arg2->{type}, $arg2->{num}]; }
+	|OP1 mem.arg1 ',' reg.arg2	{ [$_[1]->[1] | 0b011, $arg1->{type} << 4 | $arg2->{id}, $arg1->{num}]; }
+	|OP1 mem.arg1 ',' imm.arg2	{ [$_[1]->[1] | 0b100, $arg1->{type} << 4 | getSize($arg1->{size}, $arg2->{size}), $arg1->{num}, $arg2->{num}]; }
+	|OP2 reg.arg1	{ [$_[1]->[1], $_[1]->[2] << 6 | 0b000000 | $arg1->{id}];  }
+	|OP2 mem.arg1	{ [$_[1]->[1], $_[1]->[2] << 6 | 0b010000 | getSize($arg1->{size}) << 5 | $arg1->{type}, $arg1->{num}];  }
+	|OP2 imm.arg1	{ [$_[1]->[1], $_[1]->[2] << 6 | 0b100000 | getSize($arg1->{size}), $arg1->{num}];  }
+	|OP3 { [$_[1]->[1], $_[1]->[2]];  }
+	|OP4 { $_[0]->YYLexer(\&SysArg1Lexer); } sysarg.opd { $_[0]->YYLexer(\&MyLexer); [$_[1]->[1], @$opd]; }
+	|OP100 $NUM { [($_[1]->[1]) ? @{getWordArray($NUM)} : ${getWordArray($NUM)}[1]]; }
+	|OP100 $STR0 { [unpack('C*', $STR0), 0]; }
+	|OP100 $STR1 { [unpack('C*', $STR1)]; }
+	;
+	
+reg:	REG { $_[1]; }
+		;
+
+sysarg:	$DFIN
+			{
+				$_[0]->YYLexer(\&MyLexer);
+				[$DFIN];
+			}
+		|sysddisop.op {$_[0]->YYLexer(\&MyLexer);} ',' ID.type ',' mem.arg
+			{
+				given (uc $type) {
+					when('C') { return [$op | 0b0000, $arg->{num}]; }
+					when('B') { return [$op | 0b0001, $arg->{num}]; }
+					when('O') { return [$op | 0b0010, $arg->{num}]; }
+					when('D') { return [$op | 0b0011, $arg->{num}]; }
+					when('H') { return [$op | 0b0100, $arg->{num}]; }
+					when('U') { return [$op | 0b0111, $arg->{num}]; }
+					default { die "unknown dis type: %type"; }
+				}
+			}
+		|$DDMPR
+			{
+				$_[0]->YYLexer(\&MyLexer);
+				[$DDMPR];
+			}
+		;
+
+sysddisop:	DDIS1
+			|DDIS2
+			;
+
+mem:	size '[' $NUM ']'	{ {size => $_[1], num => getWordArray($NUM), type => 15}; }
+		|size '[' $ID ']'
+			{
+				my $ref = [undef, undef];
+				addUnsolvedLabel($_[0], $ID, $ref);
+				{size => $_[1], num => $ref, type => 15};
+			}
+		|size '[' $REG ']'
+			{
+				my $type = $REG->{no};
+				defined $type or die "Unsupported reg";
+				{size => $_[1], num => getWordArray(0), type => $type};
+			}
+		|size '[' $REG '+' $NUM ']'
+			{
+				my $type = $REG->{no};
+				defined $type or die "Unsupported reg";
+				{size => $_[1], num => getWordArray($NUM), type => $type};
+			}
+		|size '[' REG.reg1 '+' REG.reg2 '+' $NUM ']'
+			{
+				my $type1 = $reg1->{no};
+				my $type2 = $reg2->{no};
+				my $type;
+				defined $type1 || defined $type2 or die "Unsupported reg";
+				($type1, $type2) = ($type2, $type1) if ($type1 > $type2);
+				given ($type1) {
+					when(3) {
+						given ($type2) {
+							when(6) { $type = 8; }
+							when(7) { $type = 9; }
+						}
+					}
+					when(4) {
+						given ($type2) {
+							when(6) { $type = 10; }
+							when(7) { $type = 11; }
+						}
+					}
+					when(5) {
+						given ($type2) {
+							when(6) { $type = 12; }
+							when(7) { $type = 13; }
+						}
+					}
+				}
+				{size => $_[1], num => getWordArray($NUM), type => $type};
+			}
+		;
+
+imm:	size $NUM	{ {size => $_[1], num => getWordArray($NUM)}; }
+		|size $ID
+			{
+				my $ref = [undef, undef];
+				addUnsolvedLabel($_[0], $ID, $ref);
+				{size => $_[1], num => $ref};
+			}
+		;
+
+size:	{ undef; }
+		|BYTE	{ 0; }
+		|WORD	{ 1; }
+		;
+
+%%
+
+sub getSize {
+	if (defined $_[0] && defined $_[1] && $_[0] != $_[1]) {
+		die "unmatched size $_[0] and $_[1]";
+	}
+	return $_[0] // $_[1] // 1;
+}
+
+sub getWordArray {
+	return [$_[0] >> 8 & 0xFF, $_[0] & 0xFF];
+}
+
+sub MyLexer {
+	my ($p) = shift;
+	
+	for ($p->YYData->{INPUT}) {
+		m/\G\s+/gc;
+		m/\G;.*/gc;
+		$_ eq '' and return ('', undef);
+		m/\G(0b[01]+)/igc and return ('NUM', oct $1);
+		m/\G(0o?[0-7]+)/igc and return ('NUM', oct $1);
+		m/\G(0x[0-9A-F]+)/igc and return ('NUM', oct $1);
+		m/\G([\+\-]?[0-9]+)/gc and return ('NUM', $1);
+		if (m/\G(\w+)/gc) {
+			my $key = uc $1;
+			exists $regs{$key} and return ('REG', $regs{$key});
+			exists $ops{$key} and return ('OP' . $ops{$1}->[0], $ops{$1});
+			$key eq 'BYTE' and return ('BYTE', undef);
+			$key eq 'WORD' and return ('WORD', undef);
+			return ('ID', $1);
+		}
+		m/\G\"((?:[^\\\"]|\\.)*)\"/igc and return ('STR0', unescape($1));
+		m/\G\'((?:[^\\\']|\\.)*)\'/igc and return ('STR1', unescape($1));
+		m/\G(.)/gcs and return ($1, $1)
+	}
+	return ('', undef);
+}
+
+sub SysArg1Lexer {
+	my ($p) = shift;
+	
+	for ($p->YYData->{INPUT}) {
+		m/\G\s+/gc;
+		$_ eq '' and return ('', undef);
+		m/\GDFIN/igc and return ('DFIN', 0b00000000);
+		m/\GDDIS1/igc and return ('DDIS1', 0b00010000);
+		m/\GDDIS2/igc and return ('DDIS2', 0b00110000);
+		m/\GDDMPR/igc and return ('DDMPR', 0b01000000);
+		m/\G(.)/gcs and return ($1, $1)
+	}
+	return ('', undef);
+}
+
+sub init {
+	exists $_[0]->YYData->{CmdPc} or $_[0]->YYData->{CmdPc} = 0;
+	exists $_[0]->YYData->{Cmd} or $_[0]->YYData->{Cmd} = [];
+	exists $_[0]->YYData->{Labels} or $_[0]->YYData->{Labels} = {};
+	exists $_[0]->YYData->{UnsolvedLabels} or $_[0]->YYData->{UnsolvedLabels} = {};
+}
+
+sub addOp {
+	my $parser = shift;
+	my $op = shift;
+	foreach my $bin (@$op) {
+		if (ref $bin) {
+			$parser->YYData->{CmdPc} += scalar @$bin;
+		} else {
+			$parser->YYData->{CmdPc} += 1;
+		}
+	}
+	push @{$parser->YYData->{Cmd}}, $op;
+}
+
+sub addLabel {
+	my $parser = shift;
+	my $name = shift;
+	my $addr = shift;
+	
+	if (defined $addr) {
+		my $count = $addr - $parser->YYData->{CmdPc};
+		if ($count > 0) {
+			$parser->YYData->{CmdPc} = $addr;
+			push @{$parser->YYData->{Cmd}}, [(undef) x $count];
+		} else {
+			print "Label addr is ignored: pc = ", $parser->YYData->{CmdPc}, " addr=$addr\n";
+		}
+	}
+	
+	if (defined $name) {
+		if (exists $parser->YYData->{Labels}->{$name}) {
+			print "Label '$name' is already exists, ignored.\n";
+		} else {
+			$parser->YYData->{Labels}->{$name} = $parser->YYData->{CmdPc};
+		}
+	}
+}
+
+
+sub addUnsolvedLabel {
+	my $parser = shift;
+	my $name = shift;
+	my $ref = shift;
+	my $ulabels = $parser->YYData->{UnsolvedLabels};
+	exists $ulabels->{$name} or $ulabels->{$name} = [];
+	push @{$ulabels->{$name}}, $ref;
+}
+
+sub solveLabels {
+	my $parser = shift;
+	while ((my $name, my $refs) = each %{$parser->YYData->{UnsolvedLabels}}) {
+		exists $parser->YYData->{Labels}->{$name} or die "Label not found: name=$name";
+		my $pc = $parser->YYData->{Labels}->{$name};
+		foreach my $ref (@$refs) {
+			my $addr = getWordArray($pc);
+			@$ref[0,1] = @$addr;
+		}
+	}
+}
+
+sub unescape {
+	my $str = shift;
+	$str =~ s/\\n/\n/g;
+	$str =~ s/\\r/\r/g;
+	$str =~ s/\\t/\t/g;
+	$str =~ s/\\(.)/$1/g;
+	return $str;
+}
+
+__PACKAGE__->lexer(\&MyLexer);
+
+1;
